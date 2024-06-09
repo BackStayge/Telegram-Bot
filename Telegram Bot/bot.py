@@ -31,7 +31,7 @@ print(f"Loaded users from {USERS_FILE}: {users}")
 
 def set_commands(bot):
     commands = [
-        types.BotCommand(command="/start", description="Запустить бота"),
+        types.BotCommand(command="/start", description="Главное меню"),
         types.BotCommand(command="/help", description="Получить помощь")
     ]
     bot.set_my_commands(commands)
@@ -44,11 +44,11 @@ def main(message):
         print(f"Added user {message.chat.id} to users list")
 
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button1 = types.KeyboardButton("Гаф")
+    button1 = types.KeyboardButton("Посчитать калории")
     button2 = types.KeyboardButton("Мур")
 
     menu.add(button1, button2)
-    bot.send_message(message.chat.id, 'Привет, Звездочка', reply_markup=menu)
+    bot.send_message(message.chat.id, 'Ты солнышко (づ◔ ͜ʖ◔)づ', reply_markup=menu)
 
 # Обработчик команды /help
 @bot.message_handler(commands=['help'])
@@ -60,22 +60,22 @@ def get_message(message):
     if message.chat.type == 'private':
         if message.text == 'Мур':
             bot.send_sticker(message.chat.id, 'CAACAgQAAxkBAAEMRXJmZLl1WE0gSfjnkYWJBzFEoVtvFQAC3wgAAvFVgVFsqsmMvkACrDUE')
-        elif message.text == 'Гаф':
-            bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEMRXRmZLmnVnufYsOc7vFs6mCXVFkWkAACUQADrWW8FIai9pu49fluNQQ')
+        elif message.text == 'Посчитать калории':
+            bot.send_message(message.chat.id, "Сколько киллометров прошла?")
         else:
-            inline = types.InlineKeyboardMarkup(row_width=2)
-            button1 = types.InlineKeyboardButton("Yes", callback_data="yes")
-            button2 = types.InlineKeyboardButton("No", callback_data="no")
-            inline.add(button1, button2)
-            bot.send_message(message.chat.id, 'Выбери хуй', reply_markup=inline)
+            bot.send_message(message.chat.id, 'Я глупенький, я такова не знаю ((')
 
 def scheduled_message():
-    for user_id in [643651013]:
-        bot.send_message(user_id, "А я знаю что ты ебешь себя в жопу!")
+    for user_id in [643016513, 643651013]:
+        try:
+            bot.send_message(user_id, "Ты самая красивая!")
+        except:
+            print("huy tam")
+
 
 # Настройка планировщика
 scheduler = BackgroundScheduler()
-scheduler.add_job(scheduled_message, 'cron', hour=18, minute=7)  # Например, каждый день в 14:00
+scheduler.add_job(scheduled_message, 'cron', hour=2, minute=1)  # Например, каждый день в 14:00
 scheduler.start()
 # Запуск бота и установка команд
 if __name__ == '__main__':
