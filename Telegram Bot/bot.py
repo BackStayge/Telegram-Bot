@@ -2,8 +2,11 @@ import telebot
 import datetime
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 import json
 import os
+import pytz
+
 
 
 TOKEN = '7413652825:AAG8WrPJAmMgLpJdbltVgVn_3Tsr0lnn3TY'
@@ -228,8 +231,9 @@ def callback_inline(call):
 
 
 def scheduled_message():
-    for user_id in users:
-        bot.send_message(user_id, "ТЫ прекрасна!")
+    for user_id in ["1784266296"]:
+        bot.send_message(user_id, "Федя тебя любит)")
+
 def sceduled_time():
     for user_id in ["643651013"]:
         if user_id not in users_data:
@@ -237,9 +241,11 @@ def sceduled_time():
         users_data[user_id]['calories'] = float(0)
     save_users_data(users_data)
 
+timezone = pytz.timezone('Europe/Samara')
+
 scheduler = BackgroundScheduler()
-scheduler.add_job(scheduled_message, 'cron', hour=15, minute=00)
-scheduler.add_job(sceduled_time, 'cron', hour=23, minute=00)
+scheduler.add_job(scheduled_message, CronTrigger(hour=15, minute=15, timezone=timezone))
+scheduler.add_job(sceduled_time, CronTrigger(hour=0, minute=0, timezone=timezone))
 scheduler.start()
 
 if __name__ == '__main__':
