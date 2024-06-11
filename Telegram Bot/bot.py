@@ -109,7 +109,9 @@ def get_message(message):
         elif message.text == 'Записать активность':
             inline = types.InlineKeyboardMarkup(row_width=2)
             button1 = types.InlineKeyboardButton("Ходьба / Бег", callback_data="beg")
-            inline.add(button1)
+            button2 = types.InlineKeyboardButton("Пилон", callback_data="pil")
+            button3 = types.InlineKeyboardButton("Метание ножей", callback_data="noz")
+            inline.add(button1, button2, button3)
             bot.send_message(message.chat.id, "Выберите вид активности:", reply_markup=inline)
         elif message.text == 'Записать вес':
             set_weight(message)
@@ -168,17 +170,62 @@ def get_message(message):
                     bot.send_message(message.chat.id, "Нет какой-то информации о Вас")
             else:
                 bot.send_message(chat_id, 'Продолжительность должна быть числом.')
+        elif state == 'awaiting_timepil':
+            if message.text.replace('.', '', 1).isdigit():
+                try:
+                    timepil = int(message.text)
+                    m = users_data[chat_id].get('weight')
+                    calories = round(5.5*m*(timepil/60))
+                    if 'calories' not in users_data[chat_id]:
+                        users_data[chat_id]['calories'] = 0
+                    users_data[chat_id]['calories'] += calories
+                    save_users_data(users_data)
+                    bot.send_message(message.chat.id,
+                                     f"Вы потратили {calories} калорий за {timepil} минут тренировки. Всего потрачено калорий сегодня: {users_data[chat_id]['calories']}")
+                    user_states[chat_id] = None
+                except:
+                    bot.send_message(message.chat.id, "Нет какой-то информации о Вас")
+            else:
+                bot.send_message(chat_id, 'Продолжительность должна быть числом.')
+        elif state == 'awaiting_timenoz':
+            if message.text.replace('.', '', 1).isdigit():
+                try:
+                    timenoz = int(message.text)
+                    m = users_data[chat_id].get('weight')
+                    calories = round(3.5*m*(timenoz/60))
+                    if 'calories' not in users_data[chat_id]:
+                        users_data[chat_id]['calories'] = 0
+                    users_data[chat_id]['calories'] += calories
+                    save_users_data(users_data)
+                    bot.send_message(message.chat.id,
+                                     f"Вы потратили {calories} калорий за {timenoz} минут тренировки. Всего потрачено калорий сегодня: {users_data[chat_id]['calories']}")
+                    user_states[chat_id] = None
+                except:
+                    bot.send_message(message.chat.id, "Нет какой-то информации о Вас")
+            else:
+                bot.send_message(chat_id, 'Продолжительность должна быть числом.')
         else:
             bot.send_message(message.chat.id, 'Я такова не знаю, я глупенький')
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
+    chat_id = str(call.message.chat.id)
     if call.data == "beg":
-        chat_id = str(call.message.chat.id)
         bot.send_message(call.message.chat.id, "Сколько километров прошли?")
         user_states[chat_id] = 'awaiting_distance'
         bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,
                               text='Ходьба / Бег')
+    elif call.data == "pil":
+        bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
+        user_states[chat_id] = 'awaiting_timepil'
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Пилон')
+    elif call.data == "noz":
+        bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
+        user_states[chat_id] = 'awaiting_timenoz'
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Метание ножей')
+
 
 def scheduled_message():
     for user_id in users:
