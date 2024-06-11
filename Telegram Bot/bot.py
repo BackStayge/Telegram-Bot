@@ -1,13 +1,10 @@
 import telebot
-import datetime
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import json
 import os
 import pytz
-
-
 
 TOKEN = '7413652825:AAG8WrPJAmMgLpJdbltVgVn_3Tsr0lnn3TY'
 bot = telebot.TeleBot(TOKEN)
@@ -52,7 +49,8 @@ users_data = load_users_data()
 print(f"Loaded users data from {USERS_DATA_FILE}: {users_data}")
 
 user_states = {}  # Словарь для хранения состояния пользователей
-
+noz_lvl = [3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4]
+pil_lvl = [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6]
 def set_commands(bot):
     commands = [
         types.BotCommand(command="/start", description="Запустить бота"),
@@ -110,7 +108,7 @@ def get_message(message):
             calories = users_data[chat_id].get('calories')
             bot.send_message(chat_id, f'Сегодня вы потратили {calories} калорий')
         elif message.text == 'Записать активность':
-            inline = types.InlineKeyboardMarkup(row_width=2)
+            inline = types.InlineKeyboardMarkup(row_width=1)
             button1 = types.InlineKeyboardButton("Ходьба / Бег", callback_data="beg")
             button2 = types.InlineKeyboardButton("Пилон", callback_data="pil")
             button3 = types.InlineKeyboardButton("Метание ножей", callback_data="noz")
@@ -178,7 +176,8 @@ def get_message(message):
                 try:
                     timepil = int(message.text)
                     m = users_data[chat_id].get('weight')
-                    calories = round(5.5*m*(timepil/60))
+                    pilcoef = users_data[chat_id].get('pilcoef')
+                    calories = round(pilcoef * m * (timepil / 60))
                     if 'calories' not in users_data[chat_id]:
                         users_data[chat_id]['calories'] = 0
                     users_data[chat_id]['calories'] += calories
@@ -195,7 +194,8 @@ def get_message(message):
                 try:
                     timenoz = int(message.text)
                     m = users_data[chat_id].get('weight')
-                    calories = round(3.5*m*(timenoz/60))
+                    nozcoef = users_data[chat_id].get('nozcoef')
+                    calories = round(nozcoef*m*(timenoz/60))
                     if 'calories' not in users_data[chat_id]:
                         users_data[chat_id]['calories'] = 0
                     users_data[chat_id]['calories'] += calories
@@ -219,26 +219,54 @@ def callback_inline(call):
         bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,
                               text='Ходьба / Бег')
     elif call.data == "pil":
-        bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
-        user_states[chat_id] = 'awaiting_timepil'
+        inline = types.InlineKeyboardMarkup()
+        buttons = []
+        for i in range(1, 11):
+            button = types.InlineKeyboardButton(str(i), callback_data=f"{i}pil")
+            buttons.append(button)
+
+        for i in range(0, len(buttons), 5):  # 5 кнопок в строке
+            inline.row(*buttons[i:i + 5])
+
+        bot.send_message(chat_id, "Оцените интенсивность тренировки:", reply_markup=inline)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Пилон')
     elif call.data == "noz":
-        bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
-        user_states[chat_id] = 'awaiting_timenoz'
+        inline = types.InlineKeyboardMarkup()
+        buttons = []
+        for i in range(1, 11):
+            button = types.InlineKeyboardButton(str(i), callback_data=f"{i}noz")
+            buttons.append(button)
+
+        for i in range(0, len(buttons), 5):  # 5 кнопок в строке
+            inline.row(*buttons[i:i + 5])
+
+        bot.send_message(chat_id, "Оцените интенсивность тренировки:", reply_markup=inline)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Метание ножей')
-
+    for i in range(1, 11):
+        if call.data == f"{i}pil":
+            users_data[chat_id]['pilcoef'] = pil_lvl[i - 1]
+            bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
+            user_states[chat_id] = 'awaiting_timepil'
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text=f'Интенсивность тренировки: {i}')
+        elif call.data == f"{i}noz":
+            users_data[chat_id]['nozcoef'] = noz_lvl[i - 1]
+            bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
+            user_states[chat_id] = 'awaiting_timenoz'
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text=f'Интенсивность тренировки: {i}')
 
 def scheduled_message():
-    for user_id in ["1784266296"]:
+    for user_id in [1784266296]:
         bot.send_message(user_id, "Федя тебя любит)")
 
 def sceduled_time():
-    for user_id in ["643651013"]:
-        if user_id not in users_data:
-            users_data[user_id] = {}
-        users_data[user_id]['calories'] = float(0)
+    for user_id in users:
+        if f"{user_id}" not in users_data:
+            users_data[f"{user_id}"] = {}
+        users_data[f"{user_id}"]['calories'] = 0
     save_users_data(users_data)
 
 timezone = pytz.timezone('Europe/Samara')
