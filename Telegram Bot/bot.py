@@ -1,8 +1,10 @@
 import telebot
+import datetime
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
 import json
 import os
+
 
 TOKEN = '7413652825:AAG8WrPJAmMgLpJdbltVgVn_3Tsr0lnn3TY'
 bot = telebot.TeleBot(TOKEN)
@@ -148,18 +150,22 @@ def get_message(message):
                 bot.send_message(chat_id, 'Расстояние должно быть числом.')
         elif state == 'awaiting_duration':
             if message.text.replace('.', '', 1).isdigit():
-                duration = int(message.text)
-                distance = users_data[chat_id].get('distance', 0)
-                m = users_data[chat_id].get('weight')
-                h = users_data[chat_id].get('height')/100
-                v = distance*1000/(duration*60)
-                calories = round((0.035*m + ((v**2/h)*0.029*m))*duration)
-                if 'calories' not in users_data[chat_id]:
-                    users_data[chat_id]['calories'] = 0
-                users_data[chat_id]['calories'] += calories
-                save_users_data(users_data)
-                bot.send_message(message.chat.id, f"Вы потратили {calories} калорий за {duration} минут прогулки на расстояние {distance} км. Всего потрачено калорий сегодня: {users_data[chat_id]['calories']}")
-                user_states[chat_id] = None
+                try:
+                    duration = int(message.text)
+                    distance = users_data[chat_id].get('distance', 0)
+                    m = users_data[chat_id].get('weight')
+                    h = users_data[chat_id].get('height') / 100
+                    v = distance * 1000 / (duration * 60)
+                    calories = round((0.035 * m + ((v ** 2 / h) * 0.029 * m)) * duration)
+                    if 'calories' not in users_data[chat_id]:
+                        users_data[chat_id]['calories'] = 0
+                    users_data[chat_id]['calories'] += calories
+                    save_users_data(users_data)
+                    bot.send_message(message.chat.id,
+                                     f"Вы потратили {calories} калорий за {duration} минут прогулки на расстояние {distance} км. Всего потрачено калорий сегодня: {users_data[chat_id]['calories']}")
+                    user_states[chat_id] = None
+                except:
+                    bot.send_message(message.chat.id, "Нет какой-то информации о Вас")
             else:
                 bot.send_message(chat_id, 'Продолжительность должна быть числом.')
         else:
@@ -176,10 +182,17 @@ def callback_inline(call):
 
 def scheduled_message():
     for user_id in users:
-        bot.send_message(user_id, "Я тебя люблю!")
+        bot.send_message(user_id, "ТЫ прекрасна!")
+def sceduled_time():
+    for user_id in ["643651013"]:
+        if user_id not in users_data:
+            users_data[user_id] = {}
+        users_data[user_id]['calories'] = float(0)
+    save_users_data(users_data)
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(scheduled_message, 'cron', hour=21, minute=30)
+scheduler.add_job(scheduled_message, 'cron', hour=15, minute=00)
+scheduler.add_job(sceduled_time, 'cron', hour=23, minute=00)
 scheduler.start()
 
 if __name__ == '__main__':
