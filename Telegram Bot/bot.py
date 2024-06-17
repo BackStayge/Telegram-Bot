@@ -1,4 +1,6 @@
 import telebot
+import time
+import requests
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -319,6 +321,26 @@ scheduler.add_job(scheduled_message, CronTrigger(hour=15, minute=15, timezone=ti
 scheduler.add_job(sceduled_time, CronTrigger(hour=0, minute=0, timezone=timezone))
 scheduler.start()
 
+while True:
+    try:
+        bot.polling(non_stop=True)
+    except telebot.apihelper.ApiTelegramException as e:
+        if e.error_code == 429:
+            retry_after = int(e.result_json['parameters']['retry_after'])
+            print(f"Too Many Requests: retry after {retry_after} seconds")
+            time.sleep(retry_after)
+        elif e.error_code == 502:
+            print("Bad Gateway, retrying in 5 seconds...")
+            time.sleep(5)
+        else:
+            raise
+    except requests.exceptions.ReadTimeout:
+        print("Read Timeout, retrying in 5 seconds...")
+        time.sleep(5)
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        time.sleep(5)
+
 if __name__ == '__main__':
     set_commands(bot)
-    bot.polling(non_stop=True)
+    bot.polling(non_stop=True, interval=5)
