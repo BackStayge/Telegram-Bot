@@ -1,5 +1,6 @@
 import telebot
 import time
+from datetime import  datetime
 import requests
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -13,6 +14,8 @@ bot = telebot.TeleBot(TOKEN)
 
 USERS_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users.json"
 USERS_DATA_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users_data.json"
+
+msc = pytz.timezone('Europe/Moscow')
 
 def load_users():
     if os.path.exists(USERS_FILE):
@@ -51,9 +54,12 @@ users_data = load_users_data()
 print(f"Loaded users data from {USERS_DATA_FILE}: {users_data}")
 
 user_states = {}  # Словарь для хранения состояния пользователей
+
+# Списки с коэффициентами для тренировок
 noz_lvl = [3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4]
 pil_lvl = [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6]
 bas_lvl = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
 def set_commands(bot):
     commands = [
         types.BotCommand(command="/start", description="Запустить бота"),
@@ -68,7 +74,7 @@ def main(message):
     if message.chat.id not in users:
         users.append(message.chat.id)
         save_users(users)
-        print(f"Added user {message.chat.id} to users list")
+        print(f"Added user {message.chat.id} to users list" )
 
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton("Гаф")
@@ -86,21 +92,21 @@ def help_command(message):
 def set_weight(message):
     chat_id = str(message.chat.id)
     user_states[chat_id] = 'awaiting_weight'
-    print(f"User {chat_id} state set to awaiting_weight")  # Отладочное сообщение
+    print(f"User {chat_id} state set to awaiting_weight at {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение
     bot.send_message(chat_id, "Введите ваш вес в килограммах:")
 
 @bot.message_handler(commands=['height'])
 def set_height(message):
     chat_id = str(message.chat.id)
     user_states[chat_id] = 'awaiting_height'
-    print(f"User {chat_id} state set to awaiting_height")  # Отладочное сообщение
+    print(f"User {chat_id} state set to awaiting_height at {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение
     bot.send_message(chat_id, "Введите ваш рост в сантиметрах:")
 
 @bot.message_handler(content_types=['text', 'document', 'audio'])
 def get_message(message):
     chat_id = str(message.chat.id)
     state = user_states.get(chat_id)
-    print(f"User {chat_id} state: {state}")  # Отладочное сообщение для текущего состояния пользователя
+    print(f"User {chat_id} state: {state} at {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение для текущего состояния пользователя
 
     if message.chat.type == 'private':
         if message.text == 'Мур':
@@ -156,7 +162,7 @@ def get_message(message):
                 users_data[chat_id]['distance'] = distance
                 bot.send_message(chat_id, "Введите продолжительность прогулки в минутах:")
                 user_states[chat_id] = 'awaiting_duration'
-                print(f"User {chat_id} state set to awaiting_duration")  # Отладочное сообщение
+                print(f"User {chat_id} state set to awaiting_duration at {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение
             else:
                 bot.send_message(chat_id, 'Расстояние должно быть числом.')
         elif state == 'awaiting_duration':
@@ -242,6 +248,7 @@ def callback_inline(call):
     if call.data == "beg":
         bot.send_message(call.message.chat.id, "Сколько километров прошли?")
         user_states[chat_id] = 'awaiting_distance'
+        print(f"User {chat_id} state set to awaiting_distance at {datetime.now(msc).strftime('%H:%M')}")
         bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,
                               text='Ходьба / Бег')
     elif call.data == "pil":
@@ -288,21 +295,25 @@ def callback_inline(call):
             users_data[chat_id]['pilcoef'] = pil_lvl[i - 1]
             bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
             user_states[chat_id] = 'awaiting_timepil'
+            print(f"User {chat_id} state set to awaiting_timepil at {datetime.now(msc).strftime('%H:%M')}")
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
         elif call.data == f"{i}noz":
             users_data[chat_id]['nozcoef'] = noz_lvl[i - 1]
             bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
             user_states[chat_id] = 'awaiting_timenoz'
+            print(f"User {chat_id} state set to awaiting_timenoz at {datetime.now(msc).strftime('%H:%M')}")
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
         elif call.data == f"{i}bas":
             users_data[chat_id]['bascoef'] = bas_lvl[i - 1]
             bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
             user_states[chat_id] = 'awaiting_timebas'
+            print(f"User {chat_id} state set to awaiting_timebas at {datetime.now(msc).strftime('%H:%M')}")
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
 
+#Процессы, выполняемые по таймеру
 def scheduled_message():
     for user_id in users:
         bot.send_message(user_id, "Ты сегодня прекрасна!")
@@ -321,6 +332,7 @@ scheduler.add_job(scheduled_message, CronTrigger(hour=15, minute=15, timezone=ti
 scheduler.add_job(sceduled_time, CronTrigger(hour=0, minute=0, timezone=timezone))
 scheduler.start()
 
+#Цикл с задержкой запросов
 while True:
     try:
         bot.polling(non_stop=True)
