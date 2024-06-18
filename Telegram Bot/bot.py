@@ -9,7 +9,7 @@ import json
 import os
 import pytz
 
-TOKEN = '7413652825:AAG8WrPJAmMgLpJdbltVgVn_3Tsr0lnn3TY'
+TOKEN = '6863382429:AAG5oeiGU1lJXllEwSEmtz1-vmDyoGBw79E'
 bot = telebot.TeleBot(TOKEN)
 
 USERS_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users.json"
@@ -59,6 +59,7 @@ user_states = {}  # Словарь для хранения состояния п
 noz_lvl = [3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4]
 pil_lvl = [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6]
 bas_lvl = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+yog_lvl = [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]
 
 def set_commands(bot):
     commands = [
@@ -126,7 +127,8 @@ def get_message(message):
             button2 = types.InlineKeyboardButton("Пилон", callback_data="pil")
             button3 = types.InlineKeyboardButton("Метание ножей", callback_data="noz")
             button4 = types.InlineKeyboardButton("Бассейн", callback_data="bas")
-            inline.add(button1, button2, button3, button4)
+            button5 = types.InlineKeyboardButton("Йога", callback_data="yog")
+            inline.add(button1, button2, button3, button4, button5)
             bot.send_message(message.chat.id, "Выберите вид активности:", reply_markup=inline)
         elif message.text == 'Записать вес':
             set_weight(message)
@@ -155,8 +157,9 @@ def get_message(message):
             else:
                 bot.send_message(chat_id, 'Рост должен быть числом.')
         elif state == 'awaiting_distance':
-            if message.text.replace('.', '', 1).isdigit():
-                distance = float(message.text)
+            if message.text.replace('.', '', 1).replace(',', '', 1).isdigit():
+                distance_str = message.text.replace(',', '.')
+                distance = float(distance_str)
                 if chat_id not in users_data:
                     users_data[chat_id] = {}
                 users_data[chat_id]['distance'] = distance
@@ -239,6 +242,24 @@ def get_message(message):
                     bot.send_message(message.chat.id, "Нет какой-то информации о Вас")
             else:
                 bot.send_message(chat_id, 'Продолжительность должна быть числом.')
+        elif state == 'awaiting_timeyog':
+            if message.text.replace('.', '', 1).isdigit():
+                try:
+                    timeyog = int(message.text)
+                    m = users_data[chat_id].get('weight')
+                    yogcoef = users_data[chat_id].get('yogcoef')
+                    calories = round(yogcoef * m * (timeyog / 60))
+                    if 'calories' not in users_data[chat_id]:
+                        users_data[chat_id]['calories'] = 0
+                    users_data[chat_id]['calories'] += calories
+                    save_users_data(users_data)
+                    bot.send_message(message.chat.id,
+                                     f"Вы потратили {calories} калорий за {timeyog} минут тренировки. Всего потрачено калорий сегодня: {users_data[chat_id]['calories']}")
+                    user_states[chat_id] = None
+                except:
+                    bot.send_message(message.chat.id, "Нет какой-то информации о Вас")
+            else:
+                bot.send_message(chat_id, 'Продолжительность должна быть числом.')
         else:
             bot.send_message(message.chat.id, 'Я такова не знаю, я глупенький')
 
@@ -289,6 +310,18 @@ def callback_inline(call):
         bot.send_message(chat_id, "Оцените интенсивность тренировки:", reply_markup=inline)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Бассейн')
+    elif call.data == "yog":
+        inline = types.InlineKeyboardMarkup()
+        buttons = []
+        for i in range(1, 11):
+            button = types.InlineKeyboardButton(str(i), callback_data=f"{i}yog")
+            buttons.append(button)
+        for i in range(0, len(buttons), 5):  # 5 кнопок в строке
+            inline.row(*buttons[i:i + 5])
+
+        bot.send_message(chat_id, "Оцените интенсивность тренировки:", reply_markup=inline)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Йога')
 
     for i in range(1, 11):
         if call.data == f"{i}pil":
@@ -312,10 +345,17 @@ def callback_inline(call):
             print(f"User {chat_id} state set to awaiting_timebas at {datetime.now(msc).strftime('%H:%M')}")
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
+        elif call.data == f"{i}yog":
+            users_data[chat_id]['yogcoef'] = yog_lvl[i - 1]
+            bot.send_message(call.message.chat.id, "Введите продолжительность тренировки в минутах:")
+            user_states[chat_id] = 'awaiting_timeyog'
+            print(f"User {chat_id} state set to awaiting_timeyog at {datetime.now(msc).strftime('%H:%M')}")
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text=f'Интенсивность тренировки: {i}')
 
 #Процессы, выполняемые по таймеру
 def scheduled_message():
-    for user_id in users:
+    for user_id in [643651013]:
         bot.send_message(user_id, "Ты сегодня прекрасна!")
 
 def sceduled_time():
