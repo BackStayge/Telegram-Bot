@@ -1,7 +1,7 @@
 import telebot
-import time
-from datetime import  datetime
 import requests
+import time
+from datetime import datetime
 from telebot import types
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -9,7 +9,7 @@ import json
 import os
 import pytz
 
-TOKEN = '6863382429:AAG5oeiGU1lJXllEwSEmtz1-vmDyoGBw79E'
+TOKEN = '7413652825:AAG8WrPJAmMgLpJdbltVgVn_3Tsr0lnn3TY'
 bot = telebot.TeleBot(TOKEN)
 
 USERS_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users.json"
@@ -75,7 +75,7 @@ def main(message):
     if message.chat.id not in users:
         users.append(message.chat.id)
         save_users(users)
-        print(f"Added user {message.chat.id} to users list" )
+        print(f"Added user {message.chat.id} to users list")
 
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton("Гаф")
@@ -100,10 +100,10 @@ def set_weight(message):
 def set_height(message):
     chat_id = str(message.chat.id)
     user_states[chat_id] = 'awaiting_height'
-    print(f"User {chat_id} state set to awaiting_height at {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение
+    print(f"User {chat_id} state set to awaiting_height ar {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение
     bot.send_message(chat_id, "Введите ваш рост в сантиметрах:")
 
-@bot.message_handler(content_types=['text', 'document', 'audio'])
+@bot.message_handler(content_types=['text'])
 def get_message(message):
     chat_id = str(message.chat.id)
     state = user_states.get(chat_id)
@@ -353,10 +353,10 @@ def callback_inline(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
 
-#Процессы, выполняемые по таймеру
 def scheduled_message():
-    for user_id in [643651013]:
-        bot.send_message(user_id, "Ты сегодня прекрасна!")
+    for user_id in [1784266296]:
+        bot.send_message(user_id, "Я хотел бы целовать тебя вечность")
+        print(f"Message send at {datetime.now(msc).strftime('%H:%M')}")
 
 def sceduled_time():
     for user_id in users:
