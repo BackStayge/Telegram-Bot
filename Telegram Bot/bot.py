@@ -9,7 +9,7 @@ import json
 import os
 import pytz
 
-TOKEN = '7413652825:AAG8WrPJAmMgLpJdbltVgVn_3Tsr0lnn3TY'
+TOKEN = ''
 bot = telebot.TeleBot(TOKEN)
 
 USERS_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users.json"
@@ -83,7 +83,7 @@ def main(message):
     button3 = types.KeyboardButton("Записать активность")
     button4 = types.KeyboardButton("Посмотреть калории")
     menu.add(button1, button2, button3, button4)
-    bot.send_message(message.chat.id, 'Привет, Звездочка', reply_markup=menu)
+    bot.send_message(message.chat.id, 'Привет!', reply_markup=menu)
 
 @bot.message_handler(commands=['help'])
 def help_command(message):
@@ -353,11 +353,11 @@ def callback_inline(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
 
-def scheduled_message():
+"""def scheduled_message():
     for user_id in [1784266296]:
         bot.send_message(user_id, "Я хотел бы целовать тебя вечность")
         print(f"Message send at {datetime.now(msc).strftime('%H:%M')}")
-
+"""
 def sceduled_time():
     for user_id in users:
         if f"{user_id}" not in users_data:
@@ -368,7 +368,7 @@ def sceduled_time():
 timezone = pytz.timezone('Europe/Samara')
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(scheduled_message, CronTrigger(hour=15, minute=15, timezone=timezone))
+#cheduler.add_job(scheduled_message, CronTrigger(hour=15, minute=15, timezone=timezone))
 scheduler.add_job(sceduled_time, CronTrigger(hour=0, minute=0, timezone=timezone))
 scheduler.start()
 
