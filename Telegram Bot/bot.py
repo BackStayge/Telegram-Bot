@@ -12,8 +12,8 @@ import pytz
 TOKEN = ''
 bot = telebot.TeleBot(TOKEN)
 
-USERS_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users.json"
-USERS_DATA_FILE = r"C:\Users\herob\PycharmProjects\TeleBot\Telegram-Bot\Telegram Bot\users_data.json"
+USERS_FILE = r""
+USERS_DATA_FILE = r""
 
 msc = pytz.timezone('Europe/Moscow')
 
@@ -78,8 +78,8 @@ def main(message):
         print(f"Added user {message.chat.id} to users list")
 
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button1 = types.KeyboardButton("Гаф")
-    button2 = types.KeyboardButton("Мур")
+    button1 = types.KeyboardButton("Пес")
+    button2 = types.KeyboardButton("Кот")
     button3 = types.KeyboardButton("Записать активность")
     button4 = types.KeyboardButton("Посмотреть калории")
     menu.add(button1, button2, button3, button4)
@@ -110,9 +110,9 @@ def get_message(message):
     print(f"User {chat_id} state: {state} at {datetime.now(msc).strftime('%H:%M')}")  # Отладочное сообщение для текущего состояния пользователя
 
     if message.chat.type == 'private':
-        if message.text == 'Мур':
+        if message.text == 'Кот':
             bot.send_sticker(chat_id, 'CAACAgQAAxkBAAEMSDdmZtRD3_A_HPBaevXukKsDtu46cQAC3wgAAvFVgVFsqsmMvkACyDUE')
-        elif message.text == 'Гаф':
+        elif message.text == 'Пес':
             bot.send_sticker(chat_id, 'CAACAgIAAxkBAAEMRXRmZLmnVnufYsOc7vFs6mCXVFkWkAACUQADrWW8FIai9pu49fluNQQ')
         elif message.text == 'Посмотреть калории':
             if chat_id not in users_data:
@@ -353,11 +353,6 @@ def callback_inline(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text=f'Интенсивность тренировки: {i}')
 
-"""def scheduled_message():
-    for user_id in [1784266296]:
-        bot.send_message(user_id, "Я хотел бы целовать тебя вечность")
-        print(f"Message send at {datetime.now(msc).strftime('%H:%M')}")
-"""
 def sceduled_time():
     for user_id in users:
         if f"{user_id}" not in users_data:
@@ -368,7 +363,9 @@ def sceduled_time():
 timezone = pytz.timezone('Europe/Samara')
 
 scheduler = BackgroundScheduler()
-#cheduler.add_job(scheduled_message, CronTrigger(hour=15, minute=15, timezone=timezone))
+scheduler.add_job(scheduled_message1, CronTrigger(hour=9, minute=00, timezone=timezone))
+scheduler.add_job(scheduled_message2, CronTrigger(hour=13, minute=00, timezone=timezone))
+scheduler.add_job(scheduled_message3, CronTrigger(hour=17, minute=00, timezone=timezone))
 scheduler.add_job(sceduled_time, CronTrigger(hour=0, minute=0, timezone=timezone))
 scheduler.start()
 
